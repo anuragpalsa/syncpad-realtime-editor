@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const http = require("http");
 const { Server } = require("socket.io");
 const connectiondb = require("./config/db");
+const {getOrCreateDocument} = require("./controllers/documentControllers");
 
 const connectDB = require("./config/db");
 
@@ -25,12 +26,27 @@ const io = new Server(servers , {
 });
 
 io.on("connection", (socket) => {
-    console.log("user connected", socket.id);
+    socket.on("get-document" , async(documentId) => {
+        const document = await getOrCreateDocument(documentId);
 
-    socket.on("disconnect", () => {
-        console.log("user dissconnected");
+        socket.join(documentId);
+
+        socket.emit("load-document", document.content);
+
+        socket.on("send-changes",(delta)=>{
+            socket.broadcast.to(documentId).emit("receive-changes", delta);
+        });
+
+        socket.on("save-document",async(data) => {
+            await Document.findOneAndUpdate(
+                {documentId},
+                {content :data}
+            );
+        });
     });
-});
+    
+    });
+
 
 app.get("/", (req, res) => {
   res.send("SyncPad API Running");
