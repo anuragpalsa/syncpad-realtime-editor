@@ -1,0 +1,37 @@
+.editor-container {
+  height: 100vh;
+  background: #f5f7fd;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: rgb(110, 107, 107);
+  border-bottom: 1px solid #ddd;
+  font-weight: 600;
+}
+
+.editor-box {
+  flex: 1;
+  padding: 20px;
+}
+
+#editor {
+  height: 100%;
+  background: white;
+  color:black;
+}
+
+#editor .ql-toolbar {
+  border: 1.5px;
+  border-bottom: 1px solid #ddd;
+}
+
+#editor .ql-container {
+  border: none;
+  font-size: 16px;
+ 
+}

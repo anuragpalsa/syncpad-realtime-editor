@@ -2,14 +2,20 @@ import { useEffect, useState } from "react";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import { io } from "socket.io-client";
+import {useParams } from "react-router-dom";
+import Header from "./header";
+import EditorBox from "./EditorBox";
+import "./Editor.css";
 
 const SERVER_URL = "http://localhost:5000";
 
 const Editor = () => {
   const [socket, setSocket] = useState(null);
   const [quill, setQuill] = useState(null);
+  const [user ,setUser] = useState(0);
 
-  const documentId = "123";
+  const { id: documentId } = useParams();
+  
 
   // 🔌 socket connect
   useEffect(() => {
@@ -81,7 +87,24 @@ const Editor = () => {
     return () => clearInterval(interval);
   }, [socket, quill]);
 
-  return <div id="editor" style={{ height: "100vh" }}></div>;
+  //user-count
+  useEffect(() => {
+    if (!socket ) return ;
+
+    socket.on ("user-count" , (count) => {
+      setUser(count);
+    });
+
+    return () => socket.off("user-count" );
+},[socket]);
+
+
+  return (
+    <div className="editor-container">
+      <Header user={user} />
+      <EditorBox />
+    </div>
+  );
 };
 
 export default Editor;

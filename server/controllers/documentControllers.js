@@ -1,7 +1,9 @@
 const Document = require("../models/document");
 
 const getOrCreateDocument = async (documentId) => {
-    if(!documentId) return;
+    if(!documentId) {
+  throw new Error("Document ID is required");
+};
 
     let document =await  Document.findOne({documentId});
 
