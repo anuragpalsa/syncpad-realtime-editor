@@ -1,6 +1,7 @@
 import Editor from "./components/editor";
 import {BrowserRouter , Routes , Route } from "react-router-dom";
 import Home from "./Home";
+import "./index.css";
 
 
 function App() {

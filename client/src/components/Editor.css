@@ -1,37 +1,82 @@
+
+body{
+  margin: 0;
+  font-family: "Inter", sans-serif;
+}
+
 .editor-container {
   height: 100vh;
-  background: #f5f7fd;
+  background: #f1f3f4;
   display: flex;
   flex-direction: column;
 }
 
 .editor-header {
   display: flex;
+  
   justify-content: space-between;
-  padding: 12px 20px;
-  background: rgb(110, 107, 107);
+  padding: 10px 30px;
+  background: "white";
   border-bottom: 1px solid #ddd;
   font-weight: 600;
 }
 
+.editor-main {
+   display: flex;
+  
+  justify-content: center;
+  padding: 10px 0 ;
+}
+.logo{
+  font-weight: bold;
+  font-size:"18px";
+  color: rgb(0, 0, 0);
+}
+
 .editor-box {
+  width: "800px";
+   background: white;
+  
+  padding: 10px 40px 40px 40px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
   flex: 1;
-  padding: 20px;
+  
 }
 
 #editor {
-  height: 100%;
+  height: 100vh;
   background: white;
   color:black;
 }
 
 #editor .ql-toolbar {
-  border: 1.5px;
-  border-bottom: 1px solid #ddd;
+  border: none;
+  font-size: 16px;
+  line-height: 1.6;
 }
 
 #editor .ql-container {
   border: none;
-  font-size: 16px;
+   border-bottom: 1px solid #eee;
  
+}
+#editor .ql-editor {
+  min-height: 100vh;
+}
+
+.share-btn {
+  padding: 6px 12px;
+  border: none;
+  background: #1a73e8;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.doc-title {
+  width: 100%;
+  border: none;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  outline: none;
 }
