@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 // const connectiondb = require("./config/db");
 const {getOrCreateDocument} = require("./controllers/documentControllers");
 const Document = require("./models/document");
+const multer = require("multer");
 
 const connectDB = require("./config/db");
 
@@ -70,6 +71,25 @@ socket.on("disconnect" , ()=>{
     });
     
     });
+
+    //image backend code 
+  const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+
+const upload = multer({ storage });
+
+app.post("/upload", upload.single("image"), (req, res) => {
+  const imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+  res.json({ url: imageUrl });
+});
+
+app.use("/uploads", express.static("uploads"));
 
 
 app.get("/", (req, res) => {
