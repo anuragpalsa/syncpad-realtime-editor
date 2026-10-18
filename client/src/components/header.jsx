@@ -1,6 +1,7 @@
-import { FileText,Users } from "lucide-react";
+import { FileText, Users } from "lucide-react";
+import CollaboratorAvatars from "./CollaboratorAvatars";
 
-const Header = ({user}) => {
+const Header = ({user , collaborators = []}) => {
     return (
         <div className="editor-header">
            <div className="flex items-center gap-2">
@@ -9,10 +10,14 @@ const Header = ({user}) => {
       </div>
 
             <div style={{ display: "flex", gap: "10px", alignItems: "center", color:"black" }}>
-            <Users size={18} className="text-black" />
-            <span>user:{user}</span>
-             
-            <button  className="share-btn" onClick={shareDoc}>Share</button>
+            <CollaboratorAvatars collaborators={collaborators} />
+
+  <Users size={18} className="text-black" />
+  <span>Online: {user}</span>
+
+  <button className="share-btn" onClick={shareDoc}>
+    Share
+  </button>
             </div>
         </div>
     );

@@ -82,14 +82,17 @@ body{
 }
 
 /* image styling  */
-.ql-editor img {
-  /* position: static !important; */
-  margin: 10px auto;
+
+#editor .ql-editor img {
+  display: inline-block;
   max-width: 100%;
-  display:inline-block ;
+  height: auto;
+  box-sizing: border-box;
   border-radius: 10px;
   cursor: pointer;
+  vertical-align: middle;
 }
+
 
  .img-wrapper {
   display: inline-block;

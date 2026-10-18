@@ -29,48 +29,166 @@ const io = new Server(servers , {
     }
 });
 
+
 io.on("connection", (socket) => {
-    socket.on("get-document" , async(documentId) => {
-        const document = await getOrCreateDocument(documentId);
 
-        socket.join(documentId);
-        //track usercount 
-        if(!activeUsers[documentId]) {
-          activeUsers[documentId] =[];
+    // Join a document
+    socket.on("get-document", async (documentId, collaborator = {}) => {
+        try {
+            // Clean up an earlier document room if this socket switches documents
+            const previousDocumentId = socket.data.documentId;
+
+            if (previousDocumentId && previousDocumentId !== documentId) {
+                socket.leave(previousDocumentId);
+
+                activeUsers[previousDocumentId] =
+                    (activeUsers[previousDocumentId] || []).filter(
+                        (user) => user.socketId !== socket.id
+                    );
+
+                io.to(previousDocumentId).emit(
+                    "collaborators-update",
+                    activeUsers[previousDocumentId]
+                );
+
+                io.to(previousDocumentId).emit(
+                    "user-count",
+                    activeUsers[previousDocumentId].length
+                );
+            }
+
+            socket.data.documentId = documentId;
+
+            // Create a fallback identity until the frontend sends a profile
+            const name =
+                typeof collaborator.name === "string" &&
+                collaborator.name.trim()
+                    ? collaborator.name.trim().slice(0, 24)
+                    : `Guest ${socket.id.slice(0, 4)}`;
+
+            const color =
+                typeof collaborator.color === "string" &&
+                /^#[0-9a-fA-F]{6}$/.test(collaborator.color)
+                    ? collaborator.color
+                    : "#64748b";
+
+            socket.data.collaborator = { name, color };
+
+            socket.join(documentId);
+
+            if (!activeUsers[documentId]) {
+                activeUsers[documentId] = [];
+            }
+
+            // Avoid duplicate entries for the same socket
+            const existingUser = activeUsers[documentId].find(
+                (user) => user.socketId === socket.id
+            );
+
+            if (existingUser) {
+                existingUser.name = name;
+                existingUser.color = color;
+            } else {
+                activeUsers[documentId].push({
+                    socketId: socket.id,
+                    name,
+                    color
+                });
+            }
+
+            // Send the current collaborator list and user count
+            io.to(documentId).emit(
+                "collaborators-update",
+                activeUsers[documentId]
+            );
+
+            io.to(documentId).emit(
+                "user-count",
+                activeUsers[documentId].length
+            );
+
+            // Load the saved document
+            const document = await getOrCreateDocument(documentId);
+
+            socket.emit(
+                "load-document",
+                document?.content
+                    ? JSON.parse(document.content)
+                    : ""
+            );
+        } catch (error) {
+            console.error("Error loading document:", error);
         }
+    });
 
-        activeUsers[documentId].push(socket.id);
-//send user count 
-  io.to(documentId).emit("user-count" ,activeUsers[documentId].length);
+    // Broadcast text changes to other collaborators
+    socket.on("send-changes", (delta) => {
+        const documentId = socket.data.documentId;
 
-       socket.emit("load-document",  document?.content ? JSON.parse(document.content) : "");
+        if (!documentId) return;
 
-        socket.on("send-changes",(delta)=>{
-            socket.broadcast.to(documentId).emit("receive-changes", delta);
-        });
+        socket.broadcast
+            .to(documentId)
+            .emit("receive-changes", delta);
+    });
 
-        //save ddocument
-        socket.on("save-document", async (data) => {
-    try {
-        await Document.findOneAndUpdate(
-            { documentId },
-            { content: JSON.stringify(data) }
+    // Save document content to MongoDB
+    socket.on("save-document", async (data) => {
+        const documentId = socket.data.documentId;
+
+        if (!documentId) return;
+
+        try {
+            await Document.findOneAndUpdate(
+                { documentId },
+                { content: JSON.stringify(data) }
+            );
+        } catch (error) {
+            console.error("Save error:", error);
+        }
+    });
+
+    // Broadcast cursor position and selection
+    socket.on("cursor-update", (data) => {
+        const documentId = socket.data.documentId;
+
+        if (!documentId) return;
+
+        socket.broadcast
+            .to(documentId)
+            .emit("cursor-update", {
+                socketId: socket.id,
+                collaborator: socket.data.collaborator,
+                range: data?.range ?? null
+            });
+    });
+
+    // Remove a disconnected collaborator
+    socket.on("disconnect", () => {
+        const documentId = socket.data.documentId;
+
+        if (!documentId || !activeUsers[documentId]) return;
+
+        activeUsers[documentId] = activeUsers[documentId].filter(
+            (user) => user.socketId !== socket.id
         );
-    } catch (err) {
-        console.log("Save error:", err);
-    }
+
+        io.to(documentId).emit(
+            "collaborators-update",
+            activeUsers[documentId]
+        );
+
+        io.to(documentId).emit(
+            "user-count",
+            activeUsers[documentId].length
+        );
+
+        if (activeUsers[documentId].length === 0) {
+            delete activeUsers[documentId];
+        }
+    });
 });
 
-socket.on("disconnect" , ()=>{
- activeUsers[documentId] = activeUsers[documentId].filter(
-    (id) => id !== socket.id
- );
-
-  io.to(documentId).emit("user-count", activeUsers[documentId].length);
-})
-    });
-    
-    });
 
     //image backend code 
   const storage = multer.diskStorage({
